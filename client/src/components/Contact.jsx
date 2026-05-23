@@ -1,3 +1,4 @@
+import axios from 'axios'
 import { useState, useRef } from 'react';
 import { motion, useInView } from 'framer-motion';
 import { HiMail, HiPhone, HiLocationMarker } from 'react-icons/hi';
@@ -43,28 +44,57 @@ export default function Contact() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     setLoading(true);
-    setStatus({ type: '', message: '' });
+    setStatus({ type: "", message: "" });
 
     try {
-      const res = await fetch('http://localhost:5000/api/contact', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
-      });
+      const API_URL = import.meta.env.VITE_API_URL;
 
-      if (res.ok) {
-        setStatus({ type: 'success', message: 'Message sent successfully! I\'ll get back to you soon.' });
-        setFormData({ name: '', email: '', message: '' });
-      } else {
-        throw new Error('Failed to send');
+      const response = await axios.post(
+        `${API_URL}/api/contact`,
+        {
+          name: formData.name.trim(),
+          email: formData.email.trim(),
+          message: formData.message.trim(),
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (response.data.success) {
+        setStatus({
+          type: "success",
+          message:
+            "Message sent successfully! I'll get back to you soon.",
+        });
+
+        setFormData({
+          name: "",
+          email: "",
+          message: "",
+        });
       }
-    } catch {
-      // Fallback to mailto
-      const subject = encodeURIComponent(`Portfolio Contact from ${formData.name}`);
-      const body = encodeURIComponent(`Name: ${formData.name}\nEmail: ${formData.email}\n\nMessage:\n${formData.message}`);
-      window.open(`mailto:vishupathariya146@gmail.com?subject=${subject}&body=${body}`);
-      setStatus({ type: 'info', message: 'Opening your email client as a fallback...' });
+    } catch (error) {
+      console.error(error);
+
+      if (error.response) {
+        setStatus({
+          type: "error",
+          message:
+            error.response.data.error ||
+            "Failed to send message",
+        });
+      } else {
+        setStatus({
+          type: "error",
+          message:
+            "Server is unreachable. Please try again later.",
+        });
+      }
     } finally {
       setLoading(false);
     }
