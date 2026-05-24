@@ -1,26 +1,20 @@
-import nodemailer from "nodemailer";
+import dotenv from "dotenv";
+dotenv.config();
+import { Resend } from "resend";
+const resend = new Resend(process.env.RESEND_API_KEY);
+
 
 const sendEmail = async ({ name, email, message }) => {
   try {
-    const transporter = nodemailer.createTransport({
-        host: "smtp.gmail.com",
-        port: 465,
-        secure: true,
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
-    });
+    const response = await resend.emails.send({
+      from: "portfolio@vishank.dev",
 
-    await transporter.sendMail({
-      from: process.env.EMAIL_USER,
-
-      to: process.env.EMAIL_USER,
+      to: "vishupathariya146@gmail.com",
 
       subject: `New Portfolio Message from ${name}`,
 
       html: `
-        <h2>New Contact Message</h2>
+        <h2>New Portfolio Message</h2>
 
         <p><strong>Name:</strong> ${name}</p>
 
@@ -32,9 +26,9 @@ const sendEmail = async ({ name, email, message }) => {
       `,
     });
 
-    console.log("✅ Email Sent");
+    console.log("✅ Email Sent:", response);
   } catch (error) {
-    console.error("❌ Email Error:", error.message);
+    console.error("❌ Resend Error:", error);
   }
 };
 
